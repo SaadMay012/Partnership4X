@@ -1,13 +1,20 @@
 <?php
 
-use App\Http\Controllers\Admin\BankController;
-use App\Http\Controllers\Admin\DepositController;
-use App\Http\Controllers\Admin\SliderController;
-use App\Http\Controllers\Admin\Users\UserController;
-use App\Http\Controllers\PercentageController;
+use Admin\MyNetwork;
 use App\Mail\ResetPasswordMail;
+use Admin\TransectionController;
+use Admin\ReferFriendsController;
 use App\Models\Admin\Transection;
 use Illuminate\Support\Facades\Route;
+use Illuminate\Support\Facades\Artisan;
+use Illuminate\Support\Facades\Session;
+use App\Http\Controllers\Admin\AuthController;
+use App\Http\Controllers\Admin\BankController;
+use App\Http\Controllers\PercentageController;
+use App\Http\Controllers\Admin\SliderController;
+use App\Http\Controllers\Admin\DepositController;
+use App\Http\Controllers\Admin\Users\UserController;
+
 /*
 |--------------------------------------------------------------------------
 | Web Routes
@@ -19,81 +26,81 @@ use Illuminate\Support\Facades\Route;
 |
 */
 //Clear route cache:
-Route::get('/route-cache', function() {
+Route::get('/route-cache', function () {
     $exitCode = Artisan::call('route:cache');
     return 'Routes cache cleared';
 });
-Route::get('/route-clear', function() {
+Route::get('/route-clear', function () {
     $exitCode = Artisan::call('route:clear');
     return 'Routes cache cleared';
 });
 //Clear config cache:
-Route::get('/config-cache', function() {
+Route::get('/config-cache', function () {
     $exitCode = Artisan::call('config:cache');
     return 'Config cache cleared';
 });
 // Clear application cache:
-Route::get('/clear-cache', function() {
+Route::get('/clear-cache', function () {
     $exitCode = Artisan::call('cache:clear');
     return 'Application cache cleared';
 });
 // Clear Personal Access Token:
-Route::get('/personal-access', function() {
+Route::get('/personal-access', function () {
     $exitCode = Artisan::call('passport:install');
     return 'Personal Access Token Created';
 });
 // Clear view cache:
-Route::get('/view-clear', function() {
+Route::get('/view-clear', function () {
     $exitCode = Artisan::call('view:clear');
     return 'View cache cleared';
 });
 
 //Rough Routes for testing and for cpanel config
-Route::get('/email', function () {
-    return new ResetPasswordMail();
-});
+// Route::get('/email', function () {
+//     // return new ResetPasswordMail();
+// });
 
 Route::get('/', function () {
     return redirect('/trade-center');
 });
 
 //Group Routes With Admin Language Middleware for hadnling localisation
+// Route::get('trade', function () {
+//     return 'ok';
+// });
 
-Route::group(['prefix' => 'trade-center'], function () {
-
+Route::prefix('trade-center')->group(function () {
     //////////////Admin Side Routes////////////////////
     //Route for loading admin login page
-       Route::get('reports/transactions', 'Admin\TransectionController@transactions');
-       Route::get('reports/deposits-transactions','Admin\TransectionController@deposits_transactions');
-   
-    Route::get('reports/withdraws-transactions', function() {
+    Route::get('reports/transactions', [TransectionController::class, 'transactions']);
+    Route::get('reports/deposits-transactions', [TransectionController::class, 'deposits_transactions']);
+
+    Route::get('reports/withdraws-transactions', function () {
         return view('admin.dashboard.withdraw-report');
     });
- 
-    Route::get('/', 'Admin\AuthController@index')->name('trade-center');
+    Route::get('/', [AuthController::class, 'index'])->name('trade-center');
     //Route for loading referfriend page
-    Route::get('/register', 'Admin\AuthController@register');
-    Route::get('/referfriends', 'Admin\ReferFriendsController@index');
-    Route::get('/network-tree', 'Admin\MyNetwork@index');
+    Route::get('/register', [AuthController::class,'register']);
+    Route::get('/referfriends', [ReferFriendsController::class, 'index']);
+    Route::get('/network-tree', [MyNetwork::class, 'index']);
     //Route for admin's login process
-    Route::post('/login-pro', 'Admin\AuthController@login_process');
+    Route::post('/login-pro', [AuthController::class, 'login_process']);
     //Route for admin's forgot-password view
-    Route::get('/forgot-password', 'Admin\AuthController@forgot_password');
+    Route::get('/forgot-password', [AuthController::class, 'forgot_password']);
     //Route for admin's forgot-password process
-    Route::post('/forgot-password-process', 'Admin\AuthController@forgot_password_process');
+    Route::post('/forgot-password-process', [AuthController::class, 'forgot_password_process']);
     //Route for admin's resert-password view
-    Route::get('/reset-password', 'Admin\AuthController@reset_password');
+    Route::get('/reset-password', [AuthController::class, 'reset_password']);
     //Route for admin's reset-password process
-    Route::post('/reset-password-process', 'Admin\AuthController@reset_password_process');
+    Route::post('/reset-password-process', [AuthController::class, 'reset_password_process']);
     //setting up the demanded language here
-    Route::get('/admin_lang/{lang}',  function ($lang) {
+    Route::get('/admin_lang/{lang}', function ($lang) {
         Session::put('admin_lang', $lang);
         return redirect()->back();
-
     });
     //routes for USERS//
     Route::group(['prefix' => 'users'], function () {
-        Route::get('/',[UserController::class,'index'])->name('users.list');
+        Route::get('/', [UserController::class,'index'])->name('users.list');
         Route::get('create', [UserController::class,'create'])->name('users.createView');
         Route::post('/create', [UserController::class,'create_process'])->name('users.create-process');
         Route::get('/edit/{id}', [UserController::class,'edit'])->name('users.edit');
@@ -103,7 +110,7 @@ Route::group(['prefix' => 'trade-center'], function () {
     });
     //routes for Bank//
     Route::group(['prefix' => 'bank'], function () {
-        Route::get('/',[BankController::class,'index'])->name('bank.list');
+        Route::get('/', [BankController::class,'index'])->name('bank.list');
         Route::get('create', [BankController::class,'create'])->name('bank.createView');
         Route::post('/create', [BankController::class,'create_process'])->name('bank.create-process');
         Route::get('/edit/{id}', [BankController::class,'edit'])->name('bank.edit');
@@ -113,7 +120,7 @@ Route::group(['prefix' => 'trade-center'], function () {
     });
     //routes for Sliders //
     Route::group(['prefix' => 'sliders'], function () {
-        Route::get('/',[SliderController::class,'index'])->name('sliders.list');
+        Route::get('/', [SliderController::class,'index'])->name('sliders.list');
         Route::get('create', [SliderController::class,'create'])->name('sliders.createView');
         Route::post('/create', [SliderController::class,'create_process'])->name('sliders.create-process');
         Route::get('/edit/{id}', [SliderController::class,'edit'])->name('sliders.edit');
@@ -122,9 +129,9 @@ Route::group(['prefix' => 'trade-center'], function () {
         Route::post('/change-status', [SliderController::class,'change_status'])->name('sliders.change-status');
     });
 
- Route::group(['prefix' => 'percentage'], function () {
-        Route::get('/',[PercentageController::class,'index'])->name('percentage.list');
-        Route::get('/daily-bonus',[PercentageController::class,'daily_bounes'])->name('daily.bonus.list');
+    Route::group(['prefix' => 'percentage'], function () {
+        Route::get('/', [PercentageController::class,'index'])->name('percentage.list');
+        Route::get('/daily-bonus', [PercentageController::class,'daily_bounes'])->name('daily.bonus.list');
         Route::get('/percentage-create', [PercentageController::class,'createView'])->name('percentage.create');
         Route::post('/create-process', [PercentageController::class,'create_process'])->name('percentage.create-process');
         Route::get('/edit/{id}', [PercentageController::class,'edit'])->name('percentage.edit');
@@ -134,9 +141,9 @@ Route::group(['prefix' => 'trade-center'], function () {
     });
 
 
-   //ROUTES FOR DEPOSITS//
+    //ROUTES FOR DEPOSITS//
     Route::group(['prefix' => 'deposits'], function () {
-        Route::get('/',[DepositController::class,'index'])->name('deposits.list');
+        Route::get('/', [DepositController::class,'index'])->name('deposits.list');
         Route::get('create', [DepositController::class,'create'])->name('deposits.createView');
         Route::post('/create', [DepositController::class,'create_process'])->name('deposits.create-process');
         Route::get('/edit/{id}', [DepositController::class,'edit'])->name('deposits.edit');
@@ -146,8 +153,8 @@ Route::group(['prefix' => 'trade-center'], function () {
     });
 
 
-     //routes for contact-support//
-     Route::group(['prefix' => 'contact-supports'], function () {
+    //routes for contact-support//
+    Route::group(['prefix' => 'contact-supports'], function () {
         Route::get('/', 'ContactSupportController@index')->name('contact-support.list');
         Route::get('/edit/{id}', 'ContactSupportController@editView');
     });
@@ -182,6 +189,3 @@ Route::group(['prefix' => 'trade-center'], function () {
         Route::get('/logout', 'Admin\AuthController@logout')->name('logout');
     });
 });
-
-
-

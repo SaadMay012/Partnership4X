@@ -22,19 +22,20 @@ class AuthController extends Controller
         }
     }
     //**VIEW OTP SCREEN */
-    public function code_verification(){
+    public function code_verification()
+    {
         return view('admin.auth.otp-code');
     }
     //**OTP CODE PROCESS */
-    public function code_verification_process(Request $request){
-        $user = User::where('remember_token',$request->otp_code)->first();
-        if($user){
-            User::where('remember_token',$request->otp_code)->update(['is_active' => 1]);
+    public function code_verification_process(Request $request)
+    {
+        $user = User::where('remember_token', $request->otp_code)->first();
+        if ($user) {
+            User::where('remember_token', $request->otp_code)->update(['is_active' => 1]);
             return 'true';
-        }else{
+        } else {
             return 'flase';
         }
-
     }
 public function register()
 {
@@ -43,39 +44,41 @@ public function register()
 //CREATE PROCESS START HERE//
 public function create_process(Request $request)
 {
-    $checkEmail=User::where('email',$request->email)->first();
-        if(!empty($checkEmail)) return 'email';
-        $user= new User ;
-        $user->first_name = $request->first_name;
-        $user->last_name = $request->last_name;
-        $user->email  = $request->email;
-        $user->phone = $request->phone;
-        $user->image = $request->hasFile('image') ?  $request->file('image')->store('UserProfile') :'';
-        $user->password = $request->password;
-        $user->real_password = $request->password;
-        $user->id_card_number = $request->cnic_number;
-        $user->sponcer_by = $request->sponcer_by;
-        $user->save();
-        $right_code = random_int(10000, 99999).$user->id;
-        $left_code = $user->id.random_int(10000, 99999);
+    $checkEmail=User::where('email', $request->email)->first();
+    if (!empty($checkEmail)) {
+        return 'email';
+    }
+    $user= new User() ;
+    $user->first_name = $request->first_name;
+    $user->last_name = $request->last_name;
+    $user->email  = $request->email;
+    $user->phone = $request->phone;
+    $user->image = $request->hasFile('image') ? $request->file('image')->store('UserProfile') : '';
+    $user->password = $request->password;
+    $user->real_password = $request->password;
+    $user->id_card_number = $request->cnic_number;
+    $user->sponcer_by = $request->sponcer_by;
+    $user->save();
+    $right_code = random_int(10000, 99999).$user->id;
+    $left_code = $user->id.random_int(10000, 99999);
 
-        $signup_code = random_int(100000, 999999).$user->id;
-        $data["code"] = $signup_code;
-        User::where('id',$user->id)->update(['left_code' => $left_code,'right_code' => $right_code,'remember_token' => $signup_code]);
-      //  $data["title"] = 'SignUp Verification Code';
-        $data["title"] = 'SignUp Verification New pattern';
-        
-        $email = $request->email;
-            //   Mail::send('emails.signup-mail', $data, function($message)use($data,$email) {
+    $signup_code = random_int(100000, 999999).$user->id;
+    $data["code"] = $signup_code;
+    User::where('id', $user->id)->update(['left_code' => $left_code,'right_code' => $right_code,'remember_token' => $signup_code]);
+    //  $data["title"] = 'SignUp Verification Code';
+    $data["title"] = 'SignUp Verification New pattern';
+
+    $email = $request->email;
+    //   Mail::send('emails.signup-mail', $data, function($message)use($data,$email) {
             //      $message->to($email) ->subject($data["title"]);
-            // });
-            $headers = "From:info@partnership4x.com\r\n";
-            $headers .= "Reply-To:info@partnership4x.com\r\n";
-           // $headers .= "CC: susan@example.com\r\n";
-            $headers .= 'MIME-Version: 1.0' . "\r\n";
-            $headers .= 'Content-type: text/html; charset=iso-8859-1' . "\r\n";
-            $message = '<html><body>';
-            $message .= '<script>const links = document.querySelectorAll(".copy-click");
+    // });
+    $headers = "From:info@partnership4x.com\r\n";
+    $headers .= "Reply-To:info@partnership4x.com\r\n";
+    // $headers .= "CC: susan@example.com\r\n";
+    $headers .= 'MIME-Version: 1.0' . "\r\n";
+    $headers .= 'Content-type: text/html; charset=iso-8859-1' . "\r\n";
+    $message = '<html><body>';
+    $message .= '<script>const links = document.querySelectorAll(".copy-click");
 const cls = {
   copied: "is-copied",
   hover: "is-hovered"
@@ -98,7 +101,7 @@ const clickInteraction = (e) => {
   copyToClipboard(e.target);
   e.target.classList.add(cls.copied);
   setTimeout(() => e.target.classList.remove(cls.copied), 1000);
-  setTimeout(() => e.target.classList.remove(cls.hover), 700);  
+  setTimeout(() => e.target.classList.remove(cls.hover), 700);
 }
 
 Array.from(links).forEach(link => {
@@ -109,7 +112,7 @@ Array.from(links).forEach(link => {
   link.addEventListener("mouseover", e => e.target.classList.add(cls.hover));
   link.addEventListener("mouseleave", e => {
     if (!e.target.classList.contains(cls.copied)) {
-     e.target.classList.remove(cls.hover); 
+     e.target.classList.remove(cls.hover);
     }
   });
 });
@@ -168,30 +171,29 @@ Array.from(links).forEach(link => {
     </div>
   </div>
 </div>';
-$message .= '</body></html>';
-//$headers = "From: info@partnership4x.com " . "\r\n" . "CC: support@partnership4x.com";
-            mail($email, $data["title"], $message,$headers);
-        return 'true';
-
+    $message .= '</body></html>';
+    //$headers = "From: info@partnership4x.com " . "\r\n" . "CC: support@partnership4x.com";
+    mail($email, $data["title"], $message, $headers);
+    return 'true';
 }
     //login process for admin sie
     public function login_process(Request $request)
     {
         $data = ['email' => $request->email, 'password' => $request->password];
-       // return 'hello';
+        // return 'hello';
         //checking the login data here
-        $user = User::where('email',$request->email)->first();
-        if($user){
-        if($user->is_active == 0) {
-            Session::flash('error','please verify your account from OTP code');
-            return redirect('/trade-center/opt-code');
-        }
+        $user = User::where('email', $request->email)->first();
+        if ($user) {
+            if ($user->is_active == 0) {
+                Session::flash('error', 'please verify your account from OTP code');
+                return redirect('/trade-center/opt-code');
+            }
         }
         if (Auth::attempt($data)) {
-           // return $user->is_active;
+            // return $user->is_active;
             //checking for admin login
 
-            if($user->is_active != 0) {
+            if ($user->is_active != 0) {
                 return redirect('/trade-center/dashboard');
             } else {
                 //redirecting to login page if user try to login
@@ -203,7 +205,6 @@ $message .= '</body></html>';
             Session::flash('error', trans('translation.invalid_email_or_password'));
             return redirect()->back();
         }
-       
     }
 
 
@@ -255,7 +256,6 @@ $message .= '</body></html>';
     //for reset password process
     public function reset_password_process(Request $request)
     {
-
         if ($request->token != "") {
             $user = User::find($request->token);
             $user->password = $request->password;
